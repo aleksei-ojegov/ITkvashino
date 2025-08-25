@@ -31,17 +31,17 @@ namespace Server
           if (kv.Length == 2) queryParams[kv[0]] = kv[1];
         }
 
-        var action = queryParams.GetValueOrDefault("action")?.ToLower() ?? "users"; // по умолчанию users
+        var action = queryParams.GetValueOrDefault("action")?.ToLower() ?? "users"; 
         var idStr = queryParams.GetValueOrDefault("id");
 
         if (action == "users")
         {
-          List<DataItem> items;
+          List<User> items;
 
           if (!string.IsNullOrWhiteSpace(idStr) && int.TryParse(idStr, out int id))
             items = await GetDataFromDatabase(id, ConnectionString);
           else
-            items = await GetAllDataFromDatabase(ConnectionString); // метод для всех пользователей
+            items = await GetAllDataFromDatabase(ConnectionString); 
 
           await WriteXmlResponse(response, items);
         }
@@ -113,9 +113,9 @@ namespace Server
     /// <param name="id">Query-параметры запроса из URL.</param>
     /// <param name="ConnectionString">Ссылка на таблицу БД.</param>
     /// <returns>Преобразует каждую строчку в БД в объект класса.</returns>
-    public static async Task<List<DataItem>> GetDataFromDatabase(int id, string ConnectionString)
+    public static async Task<List<User>> GetDataFromDatabase(int id, string ConnectionString)
     {
-      var items = new List<DataItem>();
+      var items = new List<User>();
 
       using var connection = new MySqlConnection(ConnectionString);
       await connection.OpenAsync();
@@ -131,7 +131,7 @@ namespace Server
 
       while (await reader.ReadAsync())
       {
-        items.Add(new DataItem
+        items.Add(new User
         {
           Id = reader.IsDBNull(idIndex) ? 0 : reader.GetInt32(idIndex),
           Name = reader.IsDBNull(nameIndex) ? string.Empty : reader.GetString(nameIndex),
@@ -148,9 +148,9 @@ namespace Server
     /// </summary>
     /// <param name="ConnectionString">Ссылка на таблицу БД.</param>
     /// <returns>Преобразует каждую строчку в БД в объект класса.</returns>
-    static async Task<List<DataItem>> GetAllDataFromDatabase(string ConnectionString)
+    static async Task<List<User>> GetAllDataFromDatabase(string ConnectionString)
     {
-      var items = new List<DataItem>();
+      var items = new List<User>();
 
       using var connection = new MySqlConnection(ConnectionString);
       await connection.OpenAsync();
@@ -164,7 +164,7 @@ namespace Server
 
       while (await reader.ReadAsync())
       {
-        items.Add(new DataItem
+        items.Add(new User
         {
           Id = reader.IsDBNull(idIndex) ? 0 : reader.GetInt32(idIndex),
           Name = reader.IsDBNull(nameIndex) ? string.Empty : reader.GetString(nameIndex),
@@ -273,59 +273,6 @@ namespace Server
       {
         response.OutputStream.Write(buffer, 0, buffer.Length);
       }
-    }
-
-    /// <summary>
-    /// Шаблон для элемента таблицы пользователя
-    /// </summary>
-    public class DataItem
-    {
-      public int Id { get; set; }
-      public string Name { get; set; }
-      public long ChatId { get; set; }
-    }
-
-    /// <summary>
-    /// Шаблон для лекарств
-    /// </summary>
-    public class Drug
-    {
-      /// <summary>
-      /// Идентификатор
-      /// </summary>
-      public int Id { get; set; }
-
-      /// <summary>
-      /// Наименование лекарства
-      /// </summary>
-      public string Name { get; set; } = string.Empty;
-
-      /// <summary>
-      /// Описание
-      /// </summary>
-      public string Description { get; set; } = string.Empty;
-
-      /// <summary>
-      /// Срок годности (в годах/месяцах или точной датой)
-      /// </summary>
-      public string ShelfLife { get; set; } = string.Empty;
-
-      /// <summary>
-      /// Количество таблеток в упаковке
-      /// </summary>
-      public int TabletsInPack { get; set; }
-      /// <summary>
-      /// Дозировка
-      /// </summary>
-      public string Dosage { get; set; }
-      /// <summary>
-      /// Показания к приминению
-      /// </summary>
-      public string Indications { get; set; } = string.Empty;
-      /// <summary>
-      /// Фармако-терапевтическая группа
-      /// </summary>
-      public string Group { get; set; }
     }
   }
 }
