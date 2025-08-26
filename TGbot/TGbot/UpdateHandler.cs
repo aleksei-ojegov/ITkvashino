@@ -60,7 +60,7 @@ namespace TGbot
                         {
                     new KeyboardButton[]
                     {
-                        new KeyboardButton("Просмотреть свои лекарства"),
+                        new KeyboardButton("Мои лекарства"),
                         new KeyboardButton("Добавить лекарства"),
                     },
                     new KeyboardButton[]
@@ -77,7 +77,7 @@ namespace TGbot
                         "Жду команды",
                         replyMarkup: replyKeyboard);
                 }
-                else if (message.Text == "Просмотреть свои лекарства")
+                else if (message.Text == "Мои лекарства")
                 {
                     await _drugDealer.SendDrug(botClient, message.Chat.Id, 0, _drugs, "my");
                 }
@@ -93,9 +93,6 @@ namespace TGbot
 
                 if (data[0] == "drug")
                 {
-                    //int index = int.Parse(data[1]);
-                    //await _drugDealer.EditDrug(botClient, callbackQuery.Message.Chat.Id, callbackQuery.Message.MessageId, index, _drugs);
-                    //await botClient.AnswerCallbackQuery(callbackQuery.Id);
                     int index = int.Parse(data[1]);
                     string mode = data[2];
 
