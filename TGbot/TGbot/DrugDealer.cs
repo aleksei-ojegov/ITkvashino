@@ -61,6 +61,7 @@ namespace TGbot
                        $"📝 Описание: {drug.Description}\n\n" +
                        $"📅 Срок годности: {drug.ShelfLife}\n" +
                        $"💊 Таблеток в упаковке: {drug.TabletsInPack}\n" +
+                       $"⏰ Частота приёма: {drug.Dosage.Description}\n" +
                        $"📅 Дата покупки: {DateTime.Now}\n\n" +
                        $"🏥 Показания: {drug.Indications}\n" +
                        $"📋 Группа: {drug.Group}";
