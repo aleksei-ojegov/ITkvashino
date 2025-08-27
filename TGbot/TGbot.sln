@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TGbot", "TGbot\TGbot.csproj", "{CCB7F58F-5A35-47D3-B8A2-6E46700E59FB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientLibrary", "..\HTTPClient\ClientLibrary\ClientLibrary.csproj", "{7D88FA7D-E202-4042-BBFA-98FC3A7F407D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CCB7F58F-5A35-47D3-B8A2-6E46700E59FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCB7F58F-5A35-47D3-B8A2-6E46700E59FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCB7F58F-5A35-47D3-B8A2-6E46700E59FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCB7F58F-5A35-47D3-B8A2-6E46700E59FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D88FA7D-E202-4042-BBFA-98FC3A7F407D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D88FA7D-E202-4042-BBFA-98FC3A7F407D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D88FA7D-E202-4042-BBFA-98FC3A7F407D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D88FA7D-E202-4042-BBFA-98FC3A7F407D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BF31358F-DB06-46B9-BC8F-9218413689E7}
+	EndGlobalSection
+EndGlobal
