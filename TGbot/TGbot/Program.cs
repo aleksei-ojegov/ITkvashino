@@ -8,6 +8,10 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using System;
 using ITkvashino.Core;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Threading;
+using ClientLibrary;
 
 class Program
 {
@@ -53,6 +57,17 @@ class Program
 
         var me = await _botClient.GetMe();
         Console.WriteLine($"{me.FirstName} запущен!");
+
+        //==============Пример работы с методами===================================================
+        var methods = new Methods();
+        var drugs = await methods.GetAllDrugs();
+
+        Console.WriteLine("\n=== Список лекарств получен в Program.cs ===");
+        foreach (var d in drugs)
+        {
+          Console.WriteLine($"{d.Id}: {d.Name} ({d.Dosage}), упаковка {d.TabletsInPack} табл.");
+        }
+        //=========================================================================================
 
         await Task.Delay(-1);
     }

@@ -5,7 +5,7 @@ VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TGbot", "TGbot\TGbot.csproj", "{CCB7F58F-5A35-47D3-B8A2-6E46700E59FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientLibrary", "..\HTTPClient\ClientLibrary\ClientLibrary.csproj", "{7D88FA7D-E202-4042-BBFA-98FC3A7F407D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientLibrary", "ClientLibrary\ClientLibrary.csproj", "{BEB7DAB1-65B7-5E54-147F-B2A27520EDC6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{CCB7F58F-5A35-47D3-B8A2-6E46700E59FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CCB7F58F-5A35-47D3-B8A2-6E46700E59FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CCB7F58F-5A35-47D3-B8A2-6E46700E59FB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7D88FA7D-E202-4042-BBFA-98FC3A7F407D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7D88FA7D-E202-4042-BBFA-98FC3A7F407D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7D88FA7D-E202-4042-BBFA-98FC3A7F407D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7D88FA7D-E202-4042-BBFA-98FC3A7F407D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEB7DAB1-65B7-5E54-147F-B2A27520EDC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEB7DAB1-65B7-5E54-147F-B2A27520EDC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEB7DAB1-65B7-5E54-147F-B2A27520EDC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEB7DAB1-65B7-5E54-147F-B2A27520EDC6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
