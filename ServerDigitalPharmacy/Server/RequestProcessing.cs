@@ -7,15 +7,17 @@ using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using System.Xml.Linq;
 using System.Data;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Server
 {
   public static class RequestProcessing
   {
     /// <summary>
-    /// Получает запрос от пользователя и формирует ответ в формате XML
+    /// Получает GET запрос от пользователя и подключает метод ответа в форме XML
     /// </summary>
     /// <param name="context">Запрос пользователя по HTTP.</param>
+    /// <param name="ConnectionString">Ссылка на БД.</param>
     public static async Task HandleRequest(HttpListenerContext context, string ConnectionString)
     {
       var request = context.Request;
@@ -34,36 +36,59 @@ namespace Server
         var action = queryParams.GetValueOrDefault("action")?.ToLower() ?? "users"; 
         var idStr = queryParams.GetValueOrDefault("id");
 
-        if (action == "users")
+        switch (action)
         {
-          List<User> items;
+          case "users":
+            {
+              List<User> items;
 
-          if (!string.IsNullOrWhiteSpace(idStr) && int.TryParse(idStr, out int id))
-            items = await GetDataFromDatabase(id, ConnectionString);
-          else
-            items = await GetAllDataFromDatabase(ConnectionString); 
+              if (!string.IsNullOrWhiteSpace(idStr) && int.TryParse(idStr, out int id))
+                items = await GetUserDataBase.GetDataFromDatabase(id, ConnectionString);
+              else
+                items = await GetUserDataBase.GetAllDataFromDatabase(ConnectionString);
 
-          await WriteXmlResponse(response, items);
-        }
-        else if (action == "drugs")
-        {
-          List<Drug> drugs;
+              await WriteXmlResponse(response, items);
+              break;
+            }
+          case "drugs":
+            {
+              List<Drug> drugs;
 
-          if (!string.IsNullOrWhiteSpace(idStr) && int.TryParse(idStr, out int id))
-          {
-            var drug = await GetDrugById(id, ConnectionString);
-            drugs = drug != null ? new List<Drug> { drug } : new List<Drug>();
-          }
-          else
-          {
-            drugs = await GetAllDrugs(ConnectionString);
-          }
+              if (!string.IsNullOrWhiteSpace(idStr) && int.TryParse(idStr, out int id))
+              {
+                var drug = await GetDrugDataBase.GetDrugById(id, ConnectionString);
+                drugs = drug != null ? new List<Drug> { drug } : new List<Drug>();
+              }
+              else
+              {
+                drugs = await GetDrugDataBase.GetAllDrugs(ConnectionString);
+              }
 
-          await WriteXmlResponse(response, drugs);
-        }
-        else
-        {
-          SendError(response, $"Неизвестное действие: {action}", 400);
+              await WriteXmlResponse(response, drugs);
+              break;
+            }
+          case "personal":
+            {
+              List<PersonalDrug> personal;
+
+              if (!string.IsNullOrWhiteSpace(idStr) && int.TryParse(idStr, out int id))
+              {
+                var p = await GetPersonalDrugDataBase.GetPersonalDrugById(id, ConnectionString);
+                personal = p != null ? new List<PersonalDrug> { p } : new List<PersonalDrug>();
+              }
+              else
+              {
+                personal = await GetPersonalDrugDataBase.GetAllPersonalDrugs(ConnectionString);
+              }
+
+              await WriteXmlResponse(response, personal);
+              break;
+            }
+            break;
+
+          default:
+            SendError(response, $"Неизвестное действие: {action}", 400);
+            break;
         }
       }
       catch (Exception ex)
@@ -104,149 +129,6 @@ namespace Server
       {
         await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
       }
-    }
-
-    /// <summary>
-    /// Получает запрос от пользователя и формирует ответ в формате XML
-    /// для найденого элемента БД.
-    /// </summary>
-    /// <param name="id">Query-параметры запроса из URL.</param>
-    /// <param name="ConnectionString">Ссылка на таблицу БД.</param>
-    /// <returns>Преобразует каждую строчку в БД в объект класса.</returns>
-    public static async Task<List<User>> GetDataFromDatabase(int id, string ConnectionString)
-    {
-      var items = new List<User>();
-
-      using var connection = new MySqlConnection(ConnectionString);
-      await connection.OpenAsync();
-
-      using var cmd = new MySqlCommand("SELECT id, name, chat_id FROM users WHERE id = @id", connection);
-      cmd.Parameters.AddWithValue("@id", id);
-
-      using var reader = await cmd.ExecuteReaderAsync();
-
-      int idIndex = reader.GetOrdinal("id");
-      int nameIndex = reader.GetOrdinal("name");
-      int valueIndex = reader.GetOrdinal("chat_id");
-
-      while (await reader.ReadAsync())
-      {
-        items.Add(new User
-        {
-          Id = reader.IsDBNull(idIndex) ? 0 : reader.GetInt32(idIndex),
-          Name = reader.IsDBNull(nameIndex) ? string.Empty : reader.GetString(nameIndex),
-          ChatId = reader.IsDBNull(valueIndex) ? 0 : reader.GetInt32(valueIndex)
-        });
-      }
-
-      return items;
-    }
-
-    /// <summary>
-    /// Получает запрос от пользователя и формирует ответ в формате XML
-    /// для всех элементов таблицы БД.
-    /// </summary>
-    /// <param name="ConnectionString">Ссылка на таблицу БД.</param>
-    /// <returns>Преобразует каждую строчку в БД в объект класса.</returns>
-    static async Task<List<User>> GetAllDataFromDatabase(string ConnectionString)
-    {
-      var items = new List<User>();
-
-      using var connection = new MySqlConnection(ConnectionString);
-      await connection.OpenAsync();
-
-      using var cmd = new MySqlCommand("SELECT id, name, chat_id FROM users ORDER BY id", connection);
-      using var reader = await cmd.ExecuteReaderAsync();
-
-      int idIndex = reader.GetOrdinal("id");
-      int nameIndex = reader.GetOrdinal("name");
-      int valueIndex = reader.GetOrdinal("chat_id");
-
-      while (await reader.ReadAsync())
-      {
-        items.Add(new User
-        {
-          Id = reader.IsDBNull(idIndex) ? 0 : reader.GetInt32(idIndex),
-          Name = reader.IsDBNull(nameIndex) ? string.Empty : reader.GetString(nameIndex),
-          ChatId = reader.IsDBNull(valueIndex) ? 0 : reader.GetInt32(valueIndex)
-        });
-      }
-
-      return items;
-    }
-
-    /// <summary>
-    /// Получает запрос от пользователя и формирует ответ в формате XML
-    /// для найденого элемента БД.
-    /// </summary>
-    /// <param name="id">Query-параметры запроса из URL.</param>
-    /// <param name="connectionString">Ссылка на таблицу БД.</param>
-    /// <returns>Преобразует каждую строчку в БД в объект класса.</returns>
-    public static async Task<Drug?> GetDrugById(int id, string connectionString)
-    {
-      using var connection = new MySqlConnection(connectionString);
-      await connection.OpenAsync();
-
-      using var cmd = new MySqlCommand(
-          "SELECT id, name, description, shelf_life, tablets, dosage, indication, `groups` FROM drugs WHERE id = @id",
-          connection);
-      cmd.Parameters.AddWithValue("@id", id);
-
-      using var reader = await cmd.ExecuteReaderAsync();
-
-      if (await reader.ReadAsync())
-      {
-        return new Drug
-        {
-          Id = reader.GetInt32("id"),
-          Name = reader.GetString("name"),
-          Description = reader.GetString("description"),
-          ShelfLife = reader.GetString("shelf_life"),
-          TabletsInPack = reader.GetInt32("tablets"),
-          Dosage = reader.GetString("dosage"),
-          Indications = reader.GetString("indication"),
-          Group = reader.GetString("groups")
-        };
-      }
-
-      return null;
-    }
-
-    /// <summary>
-    /// Получает запрос от пользователя и формирует ответ в формате XML
-    /// для всех элементов таблицы БД.
-    /// </summary>
-    /// <param name="connectionString">Ссылка на таблицу БД.</param>
-    /// <returns>Преобразует каждую строчку в БД в объект класса.</returns>
-    public static async Task<List<Drug>> GetAllDrugs(string connectionString)
-    {
-      var drugs = new List<Drug>();
-
-      using var connection = new MySqlConnection(connectionString);
-      await connection.OpenAsync();
-
-      using var cmd = new MySqlCommand(
-          "SELECT id, name, description, shelf_life, tablets, dosage, indication, `groups` FROM drugs",
-          connection);
-
-      using var reader = await cmd.ExecuteReaderAsync();
-
-      while (await reader.ReadAsync())
-      {
-        drugs.Add(new Drug
-        {
-          Id = reader.GetInt32("id"),
-          Name = reader.GetString("name"),
-          Description = reader.GetString("description"),
-          ShelfLife = reader.GetString("shelf_life"),
-          TabletsInPack = reader.GetInt32("tablets"),
-          Dosage = reader.GetString("dosage"),
-          Indications = reader.GetString("indication"),
-          Group = reader.GetString("groups")
-        });
-      }
-
-      return drugs;
     }
 
     /// <summary>
