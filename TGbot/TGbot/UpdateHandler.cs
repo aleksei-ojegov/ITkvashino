@@ -100,6 +100,21 @@ namespace TGbot
 
                     await botClient.AnswerCallbackQuery(callbackQuery.Id);
                 }
+                if (data[0] == "add")
+                {
+                int index = int.Parse(data[1]);
+                string mode = data[2];
+                var findedDrug = _drugs.FirstOrDefault(d => d.Name == _drugs[index].Name);
+
+                await botClient.DeleteMessage(callbackQuery.Message!.Chat.Id, callbackQuery.Message.MessageId);
+
+                await botClient.SendMessage(
+                    callbackQuery.Message!.Chat.Id,
+                    $"Лекарство {findedDrug.Name} добавлено");
+
+                await _drugDealer.SendDrug(botClient, callbackQuery.Message!.Chat.Id, index, _drugs, mode);
+
+            }
             }
 
             public Task HandleErrorAsync(ITelegramBotClient botClient, Exception error, CancellationToken cancellationToken)
