@@ -69,5 +69,38 @@ namespace ClientLibrary
         return new List<User>();
       }
     }
+
+    /// <summary>
+    /// Запрос на получение всех пользовательских лекарств.
+    /// </summary>
+    /// <returns>Возращает коллекцию лекарств пользователей, если их нет то пустую коллекцию.</returns>
+    public async Task<List<PersonalDrug>> GetAllPersonalDrugs()
+    {
+      string url = "http://localhost:5000/api/?action=personal_drugs";
+  
+      try
+      {
+          // получаем XML/JSON (в зависимости от того, как сервер отдаёт)
+          var xml = await SendURLandParseXml.GetStringAsync(url);
+  
+          // нужен отдельный парсер, аналогичный ParseDrugs
+          var personalDrugs = SendURLandParseXml.ParsePersonalDrugs(xml);
+  
+          Console.WriteLine($"Получено персональных лекарств: {personalDrugs.Count}");
+          foreach (var pd in personalDrugs)
+          {
+              Console.WriteLine(
+                  $"[{pd.Id}] user={pd.IdUser}, drug={pd.IdDrug}, табл={pd.Tablets}, " +
+                  $"куплено={pd.DataBuy}, активен={pd.Active}");
+          }
+  
+          return personalDrugs;
+      }
+      catch (Exception ex)
+      {
+          Console.WriteLine($"Ошибка клиента: {ex.Message}");
+          return new List<PersonalDrug>();
+      }
+    }
   }
 }
