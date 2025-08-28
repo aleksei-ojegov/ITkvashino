@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
+using Server.TableClass;
 
-namespace Server
+namespace Server.GetCommand
 {
   public class GetUserDataBase
   {
@@ -38,7 +39,7 @@ namespace Server
         {
           Id = reader.IsDBNull(idIndex) ? 0 : reader.GetInt32(idIndex),
           Name = reader.IsDBNull(nameIndex) ? string.Empty : reader.GetString(nameIndex),
-          ChatId = reader.IsDBNull(valueIndex) ? 0 : reader.GetInt32(valueIndex)
+          ChatId = reader.IsDBNull(valueIndex) ? 0 : reader.GetInt64(valueIndex)
         });
       }
 
@@ -71,7 +72,7 @@ namespace Server
         {
           Id = reader.IsDBNull(idIndex) ? 0 : reader.GetInt32(idIndex),
           Name = reader.IsDBNull(nameIndex) ? string.Empty : reader.GetString(nameIndex),
-          ChatId = reader.IsDBNull(valueIndex) ? 0 : reader.GetInt32(valueIndex)
+          ChatId = reader.IsDBNull(valueIndex) ? 0 : reader.GetInt64(valueIndex)
         });
       }
 

@@ -8,6 +8,11 @@ using MySql.Data.MySqlClient;
 using System.Xml.Linq;
 using System.Data;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Server.TableClass;
+using Server.GetCommand;
+using System.IO;
+using System.Text.Json;
+using Server.SetCommand;
 
 namespace Server
 {
@@ -35,6 +40,85 @@ namespace Server
 
         var action = queryParams.GetValueOrDefault("action")?.ToLower() ?? "users"; 
         var idStr = queryParams.GetValueOrDefault("id");
+
+        if (request.HttpMethod == "POST" && action == "personal")
+        {
+          using var reader = new StreamReader(request.InputStream);
+          var body = await reader.ReadToEndAsync();
+
+          var pd = JsonSerializer.Deserialize<PersonalDrug>(body);
+          if (pd == null)
+          {
+            SendError(response, "Неверные данные", 400);
+            return;
+          }
+
+          await SetPersonalDrug.AddPersonalDrug(pd, ConnectionString);
+
+          await WriteXmlResponse(response, new List<PersonalDrug> { pd });
+          return;
+        }
+
+        if (request.HttpMethod == "POST" && action == "updatePersonal")
+        {
+          using var reader = new StreamReader(request.InputStream);
+          var body = await reader.ReadToEndAsync();
+
+          var pd = JsonSerializer.Deserialize<PersonalDrug>(body);
+          if (pd == null || pd.Id == 0)
+          {
+            SendError(response, "Неверные данные", 400);
+            return;
+          }
+
+          await SetPersonalDrug.UpdatePersonalDrugTablets(pd.Id, pd.Tablets, ConnectionString);
+
+          await WriteXmlResponse(response, new List<PersonalDrug> { pd });
+          return;
+        }
+
+        if (request.HttpMethod == "POST" && action == "updateActive")
+        {
+          using var reader = new StreamReader(request.InputStream);
+          var body = await reader.ReadToEndAsync();
+
+          var pd = JsonSerializer.Deserialize<PersonalDrug>(body);
+          if (pd == null || pd.Id == 0)
+          {
+            SendError(response, "Неверные данные", 400);
+            return;
+          }
+
+          await SetPersonalDrug.UpdatePersonalDrugActive(pd.Id, pd.Active, ConnectionString);
+
+          await WriteXmlResponse(response, new List<PersonalDrug> { pd });
+          return;
+        }
+
+        if (request.HttpMethod == "POST" && action == "deletePersonal")
+        {
+          using var reader = new StreamReader(request.InputStream);
+          var body = await reader.ReadToEndAsync();
+
+          var pd = JsonSerializer.Deserialize<PersonalDrug>(body);
+          if (pd == null || pd.Id == 0)
+          {
+            SendError(response, "Неверные данные. Требуется Id записи для удаления", 400);
+            return;
+          }
+
+          try
+          {
+            await SetPersonalDrug.DeletePersonalDrugById(pd.Id, ConnectionString);
+            await WriteXmlResponse(response, new List<PersonalDrug> { pd });
+          }
+          catch (Exception ex)
+          {
+            SendError(response, $"Ошибка при удалении: {ex.Message}", 500);
+          }
+
+          return;
+        }
 
         switch (action)
         {
@@ -71,10 +155,21 @@ namespace Server
             {
               List<PersonalDrug> personal;
 
-              if (!string.IsNullOrWhiteSpace(idStr) && int.TryParse(idStr, out int id))
+              var allowedKeys = new HashSet<string> { "action", "id_user" };
+              foreach (var key in queryParams.Keys)
               {
-                var p = await GetPersonalDrugDataBase.GetPersonalDrugById(id, ConnectionString);
-                personal = p != null ? new List<PersonalDrug> { p } : new List<PersonalDrug>();
+                if (!allowedKeys.Contains(key))
+                {
+                  SendError(response, $"Неизвестный параметр: {key}", 400);
+                  return;
+                }
+              }
+
+              var idUserStr = queryParams.GetValueOrDefault("id_user");
+
+              if (!string.IsNullOrWhiteSpace(idUserStr) && int.TryParse(idUserStr, out int userId))
+              {
+                personal = await GetPersonalDrugDataBase.GetPersonalDrugById(userId, ConnectionString);
               }
               else
               {
@@ -84,7 +179,65 @@ namespace Server
               await WriteXmlResponse(response, personal);
               break;
             }
-            break;
+          case "updatepersonal":
+            {
+              var tabletsStr = queryParams.GetValueOrDefault("tablets");
+
+              if (!string.IsNullOrWhiteSpace(idStr) && int.TryParse(idStr, out int id) &&
+                  !string.IsNullOrWhiteSpace(tabletsStr) && int.TryParse(tabletsStr, out int newTablets))
+              {
+                try
+                {
+                  await SetPersonalDrug.UpdatePersonalDrugTablets(id, newTablets, ConnectionString);
+                  SendSuccess(response, "Количество таблеток обновлено");
+                }
+                catch (Exception ex)
+                {
+                  SendError(response, $"Ошибка при обновлении: {ex.Message}", 500);
+                }
+              }
+              else
+              {
+                SendError(response, "Неверные параметры запроса. Требуются id и tablets", 400);
+              }
+
+              break;
+            }
+          case "updateactive":
+            {
+              var activeStr = queryParams.GetValueOrDefault("active");
+
+              if (string.IsNullOrWhiteSpace(idStr) || string.IsNullOrWhiteSpace(activeStr)
+                  || !int.TryParse(idStr, out int id) || !bool.TryParse(activeStr, out bool isActive))
+              {
+                SendError(response, "Неверные параметры запроса. Требуются id и active", 400);
+                break;
+              }
+
+              await SetPersonalDrug.UpdatePersonalDrugActive(id, isActive, ConnectionString);
+              SendSuccess(response, "Лекарство установило новый статус.");
+              break;
+            }
+          case "deletepersonal":
+            {
+              if (string.IsNullOrWhiteSpace(idStr) || !int.TryParse(idStr, out int id))
+              {
+                SendError(response, "Неверные параметры запроса. Требуется id", 400);
+                break;
+              }
+
+              try
+              {
+                await SetPersonalDrug.DeletePersonalDrugById(id, ConnectionString);
+                SendSuccess(response, $"Запись с id={id} успешно удалена.");
+              }
+              catch (Exception ex)
+              {
+                SendError(response, $"Ошибка при удалении: {ex.Message}", 500);
+              }
+
+              break;
+            }
 
           default:
             SendError(response, $"Неизвестное действие: {action}", 400);
@@ -156,6 +309,19 @@ namespace Server
       {
         response.OutputStream.Write(buffer, 0, buffer.Length);
       }
+    }
+
+    private static void SendSuccess(HttpListenerResponse response, string message)
+    {
+      response.ContentType = "application/xml; charset=utf-8";
+      response.StatusCode = 200;
+
+      using var writer = new StreamWriter(response.OutputStream);
+      writer.Write(
+          $"<response>\n" +
+          $"  <status>success</status>\n" +
+          $"  <message>{System.Security.SecurityElement.Escape(message)}</message>\n" +
+          $"</response>");
     }
   }
 }

@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
+using Server.TableClass;
 
-namespace Server
+namespace Server.GetCommand
 {
   public class GetPersonalDrugDataBase
   {
@@ -34,7 +35,7 @@ namespace Server
         items.Add(new PersonalDrug
         {
           Id = reader.IsDBNull(idIndex) ? 0 : reader.GetInt32(idIndex),
-          IdUser = reader.IsDBNull(userIndex) ? 0 : reader.GetInt32(userIndex),
+          IdUser = reader.IsDBNull(userIndex) ? 0 : reader.GetInt64(userIndex),
           IdDrug = reader.IsDBNull(drugIndex) ? 0 : reader.GetInt32(drugIndex),
           Tablets = reader.IsDBNull(tabletsIndex) ? 0 : reader.GetInt32(tabletsIndex),
           DataBuy = reader.IsDBNull(dateIndex) ? string.Empty : reader.GetString(dateIndex),
@@ -45,39 +46,41 @@ namespace Server
       return items;
     }
 
-    public static async Task<PersonalDrug?> GetPersonalDrugById(int id, string ConnectionString)
+    public static async Task<List<PersonalDrug>> GetPersonalDrugById(int id_user, string ConnectionString)
     {
+      var items = new List<PersonalDrug>();
       using var connection = new MySqlConnection(ConnectionString);
       await connection.OpenAsync();
 
       using var cmd = new MySqlCommand(
-          "SELECT id, id_user, id_drug, tablets, data_buy, active FROM personal_drugs WHERE id = @id",
+          "SELECT id, id_user, id_drug, tablets, data_buy, active FROM personal_drugs WHERE id_user = @id_user",
           connection);
-      cmd.Parameters.AddWithValue("@id", id);
+      //cmd.Parameters.AddWithValue("@id", id);
+      cmd.Parameters.AddWithValue("@id_user", id_user);
 
       using var reader = await cmd.ExecuteReaderAsync();
 
-      if (await reader.ReadAsync())
-      {
-        int idIndex = reader.GetOrdinal("id");
-        int userIndex = reader.GetOrdinal("id_user");
-        int drugIndex = reader.GetOrdinal("id_drug");
-        int tabletsIndex = reader.GetOrdinal("tablets");
-        int dateIndex = reader.GetOrdinal("data_buy");
-        int activeIndex = reader.GetOrdinal("active");
+      int idIndex = reader.GetOrdinal("id");
+      int userIndex = reader.GetOrdinal("id_user");
+      int drugIndex = reader.GetOrdinal("id_drug");
+      int tabletsIndex = reader.GetOrdinal("tablets");
+      int dateIndex = reader.GetOrdinal("data_buy");
+      int activeIndex = reader.GetOrdinal("active");
 
-        return new PersonalDrug
+      while (await reader.ReadAsync())
+      {
+        items.Add(new PersonalDrug
         {
           Id = reader.IsDBNull(idIndex) ? 0 : reader.GetInt32(idIndex),
-          IdUser = reader.IsDBNull(userIndex) ? 0 : reader.GetInt32(userIndex),
+          IdUser = reader.IsDBNull(userIndex) ? 0 : reader.GetInt64(userIndex),
           IdDrug = reader.IsDBNull(drugIndex) ? 0 : reader.GetInt32(drugIndex),
           Tablets = reader.IsDBNull(tabletsIndex) ? 0 : reader.GetInt32(tabletsIndex),
           DataBuy = reader.IsDBNull(dateIndex) ? string.Empty : reader.GetString(dateIndex),
           Active = !reader.IsDBNull(activeIndex) && reader.GetBoolean(activeIndex)
-        };
+        });
       }
 
-      return null;
+      return items;
     }
   }
 }

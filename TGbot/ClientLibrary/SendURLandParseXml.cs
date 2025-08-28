@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection.PortableExecutable;
@@ -73,7 +74,8 @@ namespace ClientLibrary
 
       return users;
     }
-    public static List<PersonalDrug> ParsePersonalDrugs(string xml, List<Drug> drugs, long idTelegramUser)
+
+    public static List<PersonalDrug> ParsePersonalDrugs(string xml)
     {
       var doc = XDocument.Parse(xml);
 
@@ -84,57 +86,35 @@ namespace ClientLibrary
         throw new InvalidOperationException($"Сервер вернул ошибку: {msg}");
       }
       if (status != "success")
-      {
         throw new InvalidOperationException("Неверный формат XML: status != success");
-      }
 
-        var data = doc.Root?.Element("data");
+      var data = doc.Root?.Element("data");
       if (data == null)
+        throw new InvalidOperationException("Неверный формат XML: отсутствует <data>");
+
+      var list = new List<PersonalDrug>();
+      foreach (var x in data.Elements("personaldrug"))
       {
-                throw new InvalidOperationException("Неверный формат XML: отсутствует <data>");
+        list.Add(new PersonalDrug
+        {
+          Id = int.Parse(x.Element("id")?.Value ?? "0"),
+          IdUser = long.Parse(x.Element("idUser")?.Value ?? "0"),
+          IdDrug = int.Parse(x.Element("idDrug")?.Value ?? "0"),
+          Tablets = int.Parse(x.Element("tablets")?.Value ?? "0"),
+          PurchaseDate = DateTime.ParseExact(
+                x.Element("dataBuy")?.Value ?? "01.01.2000",
+                "dd.MM.yyyy",
+                CultureInfo.InvariantCulture),
+          IsActive = bool.Parse(x.Element("active")?.Value ?? "false")
+        });
       }
 
-      var result = new List<PersonalDrug>();
-      foreach (var xDrug in data.Elements("personal"))
-      {
-        var idDrug = GetInt(xDrug, "id_drug");
-        var idUser = GetInt(xDrug, "id_user");
-        var drug = drugs.FirstOrDefault(d => d.Id == idDrug);
-
-        if (drug == null)
-        {
-          throw new InvalidOperationException($"Не найдено лекарство с ID: {idDrug}");
-        }
-        if (idUser == idTelegramUser)
-        {
-          var personalDrug = new PersonalDrug
-          {
-            IdUser = GetInt(xDrug, "id_user"),
-            Id = GetInt(xDrug, "id"),
-            Tablets = GetInt(xDrug, "tablets"),
-            IsActive = GetBool(xDrug, "active"),
-            PurchaseDate = GetDateTime(xDrug, "data_buy") ?? DateTime.MinValue,
-            IdDrug = idDrug,
-            Name = drug.Name,
-            Description = drug.Description,
-            ShelfLife = drug.ShelfLife,
-            TabletsInPack = drug.TabletsInPack,
-            Indications = drug.Indications,
-            Dosage = drug.Dosage,
-            Group = drug.Group
-          };
-
-          result.Add(personalDrug);
-        }
-      }
-
-      return result;
+      return list;
     }
 
-
-   // Утилиты для безопасного чтения элементов
-   public static string GetString(XElement parent, string name)
-   => parent.Element(name)?.Value ?? string.Empty;
+    // Утилиты для безопасного чтения элементов
+    public static string GetString(XElement parent, string name)
+      => parent.Element(name)?.Value ?? string.Empty;
 
     public static int GetInt(XElement parent, string name)
     {
@@ -143,17 +123,20 @@ namespace ClientLibrary
     }
     private static bool GetBool(XElement element, string elementName)
     {
-            var value = GetString(element, elementName);
-            return bool.TryParse(value, out bool result) && result;
+      var value = GetString(element, elementName);
+      return bool.TryParse(value, out bool result) && result;
     }
 
-    private static DateTime? GetDateTime(XElement element, string elementName)
+    public static DateTime GetDateTime(XElement parent, string name)
     {
-            var value = GetString(element, elementName);
-            if (string.IsNullOrEmpty(value)) return null;
-
-            return DateTime.TryParse(value, out DateTime result) ? result : (DateTime?)null;
+      var str = parent.Element(name)?.Value ?? string.Empty;
+      if (DateTime.TryParse(str, out var dt))
+        return dt;
+      return default; 
     }
+
+    private static long GetLong(XElement parent, string name)
+      => long.TryParse(parent.Element(name)?.Value, out var val) ? val : 0;
   }
 
 }

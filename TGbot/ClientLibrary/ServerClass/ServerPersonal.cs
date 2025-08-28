@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Server
+namespace ClientLibrary.ServerClass
 {
-  public class PersonalDrug
+  public class ServerPersonal
   {
-    public int Id { get; set; }
-    public int IdUser { get; set; }
+    public long IdUser { get; set; }
     public int IdDrug { get; set; }
     public int Tablets { get; set; }
     public string DataBuy { get; set; }

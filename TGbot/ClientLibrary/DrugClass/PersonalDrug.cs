@@ -8,7 +8,7 @@ namespace ClientLibrary
 {
     public class PersonalDrug : Drug
     {
-        public int IdUser { get; set; }
+        public long IdUser { get; set; }
         public int IdDrug { get; set; }
         public int Tablets { get; set; }
         public bool IsActive { get; set; }
