@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ITkvashino.Core
+namespace ClientLibrary
 {
     /// <summary>
     /// Список Фармако-терапевтических групп

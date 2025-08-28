@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ITkvashino.Core
+namespace ClientLibrary
 {
     /// <summary>
     /// Класс лекарства
@@ -15,11 +15,6 @@ namespace ITkvashino.Core
         /// Идентификатор
         /// </summary>
         public int Id { get; set; }
-
-        /// <summary>
-        /// Идентификатор пользователя
-        /// </summary>
-        public long TelegramUserId { get; set; }
 
         /// <summary>
         /// Наименование лекарства
@@ -36,10 +31,6 @@ namespace ITkvashino.Core
         /// </summary>
         public string ShelfLife { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Дата покупки
-        /// </summary>
-        public DateTime PurchaseDate { get; set; }
 
         /// <summary>
         /// Количество таблеток в упаковке

@@ -7,7 +7,6 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using System;
-using ITkvashino.Core;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading;
@@ -29,12 +28,15 @@ class Program
 
     private static List<Drug> Drugs = new List<Drug> { };
 
+    private static Methods Methods = new Methods();
+
     private static DrugDealer _drugDealer = new DrugDealer();
     static async Task Main()
     {
         Drugs = _drugDataLoader.LoadDrugsFromFile(_filePath);
         //_db = new DatabaseService("Server=localhost;Port=3306;Database=Drug;User ID=root;Password=;SslMode=None;");
         //Drugs = await _db.GetAllDrugsAsync();
+        Drugs = await Methods.GetAllDrugs();
         _updateHandler = new UpdateHandler(_drugDealer, Drugs);
         _botClient = new TelegramBotClient("8214585324:AAE0bJuq5L_2ASM3dfKiOZNKomZYN5AtMBs");
         _receiverOptions = new ReceiverOptions 

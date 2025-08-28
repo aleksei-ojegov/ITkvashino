@@ -93,7 +93,8 @@ namespace Server
       }
       catch (Exception ex)
       {
-        SendError(response, $"Ошибка: {ex.Message}", 500);
+       Console.WriteLine($"[ServerError] {ex}");
+       SendError(response, $"Ошибка: {ex.Message}", 500);
       }
     }
 

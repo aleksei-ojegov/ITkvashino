@@ -4,16 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using ITkvashino.Core;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
+using ClientLibrary;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace TGbot
 {
     public class DrugDealer
     {
-        public async Task SendDrug(ITelegramBotClient botClient, long chatId, int index, List<Drug> drugs, string mode)
+        public async Task SendDrug<T>(ITelegramBotClient botClient, long chatId, int index, List<T> drugs, string mode) where T : Drug
         {
             string text = GetDrugText(drugs[index], mode);
             var keyboard = GetKeyboard(index, mode, drugs);
@@ -21,7 +21,7 @@ namespace TGbot
             await botClient.SendMessage(chatId, text, replyMarkup: keyboard);
         }
 
-        public async Task EditDrug(ITelegramBotClient botClient, long chatId, int messageId, int index, List<Drug> drugs, string mode)
+        public async Task EditDrug<T>(ITelegramBotClient botClient, long chatId, int messageId, int index, List<T> drugs, string mode) where T: Drug
         {
             string text = GetDrugText(drugs[index], mode);
             var keyboard = GetKeyboard(index, mode, drugs);
@@ -29,7 +29,7 @@ namespace TGbot
             await botClient.EditMessageText(chatId, messageId, text, replyMarkup: keyboard);
         }
 
-        private static InlineKeyboardMarkup GetKeyboard(int index, string mode, List<Drug> drugs)
+        private static InlineKeyboardMarkup GetKeyboard<T>(int index, string mode, List<T> drugs) where T : Drug
         {
             var buttons = new List<InlineKeyboardButton[]>();
 
@@ -77,19 +77,6 @@ namespace TGbot
 
         private static string GetDrugText(Drug drug, string mode)
         {
-            DateTime purchaseDate = DateTime.Now;
-            if (drug.Name == "Ибупрофен")
-            {
-               purchaseDate = new DateTime(2019, 09, 15);
-            }
-            if (drug.Name == "Супрастин")
-            {
-                purchaseDate = new DateTime(2022, 09, 15);
-            }
-            if (drug.Name == "Но-шпа")
-            {
-                purchaseDate = new DateTime(2022, 11, 15);
-            }
             if (mode == "all")
             {
                 return $"☘️ Наименование: {drug.Name}\n\n" +
@@ -99,15 +86,15 @@ namespace TGbot
                        $"🏥 Показания: {drug.Indications}\n" +
                        $"📋 Группа: {drug.Group}";
             }
-            else if (mode == "my")
+            else if ((mode == "my") && (drug is PersonalDrug personalDrug))
             {
                 return $"☘️ Наименование: {drug.Name}\n\n" +
                        $"📝 Описание: {drug.Description}\n\n" +
                        $"🍎 Срок годности: {drug.ShelfLife}\n" +
                        $"💊 Таблеток в упаковке: {drug.TabletsInPack}\n" +
                        $"⏰ Частота приёма: {drug.Dosage.Description}\n" +
-                       $"📅 Дата покупки: {purchaseDate:dd.MM.yyyy}\n\n" +
-                       $"{GetExpirationWarning(drug.ShelfLife, purchaseDate)}"+
+                       $"📅 Дата покупки: {personalDrug.PurchaseDate:dd.MM.yyyy}\n\n" +
+                       $"{GetExpirationWarning(drug.ShelfLife, personalDrug.PurchaseDate)}"+
                        $"🏥 Показания: {drug.Indications}\n\n" +
                        $"📋 Группа: {drug.Group}";
             }

@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using ITkvashino.Core;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using ClientLibrary;
 
 namespace TGbot
 {
@@ -17,6 +17,7 @@ namespace TGbot
         {
             private readonly DrugDealer _drugDealer;
             private List<Drug> _drugs;
+            private Methods Methods = new Methods(); 
 
             public UpdateHandler(DrugDealer drugDealer, List<Drug> drugs)
             {
@@ -52,8 +53,8 @@ namespace TGbot
             private async Task HandleMessage(ITelegramBotClient botClient, Message message)
             {
                 var user = message.From;
+                var userDrugs = await Methods.GetAllPersonalDrugs(user.Id, _drugs);
                 var chat = message.Chat;
-
                 if (message.Text == "/start")
                 {
                     var replyKeyboard = new ReplyKeyboardMarkup(
@@ -80,7 +81,7 @@ namespace TGbot
                 }
                 else if (message.Text == "Мои лекарства")
                 {
-                    await _drugDealer.SendDrug(botClient, message.Chat.Id, 0, _drugs, "my");
+                    await _drugDealer.SendDrug(botClient, message.Chat.Id, 0, userDrugs, "my");
                 }
                 else if (message.Text == "Просмотреть все лекарства")
                 {

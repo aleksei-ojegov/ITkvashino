@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ITkvashino.Core;
 
 namespace ClientLibrary
 {
@@ -16,7 +15,6 @@ namespace ClientLibrary
     public async Task<List<Drug>> GetAllDrugs()
     {
       string url = "http://localhost:5000/api/?action=drugs";
-
       try
       {
         var xml = await SendURLandParseXml.GetStringAsync(url);
@@ -74,24 +72,24 @@ namespace ClientLibrary
     /// Запрос на получение всех пользовательских лекарств.
     /// </summary>
     /// <returns>Возращает коллекцию лекарств пользователей, если их нет то пустую коллекцию.</returns>
-    public async Task<List<PersonalDrug>> GetAllPersonalDrugs()
+    public async Task<List<PersonalDrug>> GetAllPersonalDrugs(long userId, List<Drug> drugs)
     {
-      string url = "http://localhost:5000/api/?action=personal_drugs";
-  
-      try
+      string url = "http://localhost:5000/api/?action=personaldrugs";
+
+            try
       {
           // получаем XML/JSON (в зависимости от того, как сервер отдаёт)
           var xml = await SendURLandParseXml.GetStringAsync(url);
   
           // нужен отдельный парсер, аналогичный ParseDrugs
-          var personalDrugs = SendURLandParseXml.ParsePersonalDrugs(xml);
+          var personalDrugs = SendURLandParseXml.ParsePersonalDrugs(xml, drugs, userId);
   
           Console.WriteLine($"Получено персональных лекарств: {personalDrugs.Count}");
           foreach (var pd in personalDrugs)
           {
               Console.WriteLine(
                   $"[{pd.Id}] user={pd.IdUser}, drug={pd.IdDrug}, табл={pd.Tablets}, " +
-                  $"куплено={pd.DataBuy}, активен={pd.Active}");
+                  $"куплено={pd.PurchaseDate}, активен={pd.IsActive}");
           }
   
           return personalDrugs;
