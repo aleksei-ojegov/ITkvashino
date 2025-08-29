@@ -34,6 +34,15 @@ namespace TGbot
             var buttons = new List<InlineKeyboardButton[]>();
 
             var navigationRow = new List<InlineKeyboardButton>();
+            if (index == 0)
+            {
+                navigationRow.Add(InlineKeyboardButton.WithCallbackData("⏭️ В конец", $"drug:{drugs.Count - 1}:{mode}"));
+            }
+
+            if (index == drugs.Count - 1)
+            {
+                navigationRow.Add(InlineKeyboardButton.WithCallbackData("⏮️ В начало", $"drug:{0}:{mode}"));
+            }
 
             if (index > 0)
             {
@@ -43,16 +52,6 @@ namespace TGbot
             if (index < drugs.Count - 1)
             {
                 navigationRow.Add(InlineKeyboardButton.WithCallbackData("➡️ Далее", $"drug:{index + 1}:{mode}"));
-            }
-            
-            if(index == 0)
-            {
-                navigationRow.Add(InlineKeyboardButton.WithCallbackData("⏭️ В конец", $"drug:{drugs.Count-1}:{mode}"));
-            }
-
-            if (index == drugs.Count - 1)
-            {
-                navigationRow.Add(InlineKeyboardButton.WithCallbackData("⏮️ В начало", $"drug:{0}:{mode}"));
             }
 
             if (navigationRow.Count > 0)
@@ -65,9 +64,16 @@ namespace TGbot
                 buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("✅ Добавить лекарство к себе", $"add:{index}:{mode}") });
             }
 
-            if (mode == "my")
+            if ((mode == "my") && (drugs[index] is PersonalDrug drug))
             {
-                buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("✅ Начать лечение", $"start:{index}:{mode}") });
+                if(drug.IsActive == false)
+                {
+                    buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("✅ Начать лечение", $"start:{index}:{mode}") });
+                }
+                if (drug.IsActive == true)
+                {
+                    buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("⛔️ Закончить лечение", $"end:{index}:{mode}") });
+                }
                 buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("💊 Редактировать количество таблеток", $"changeQuantity:{index}:{mode}") });
                 buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("❌ Удалить лекарство", $"delete:{index} : {mode}")});
             }
