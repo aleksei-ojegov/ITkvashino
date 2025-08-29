@@ -7,8 +7,20 @@ using ClientLibrary;
 
 namespace TGbot
 {
+    /// <summary>
+    /// Класс парсинга дозировки
+    /// </summary>
     public static class DosageParser
     {
+        #region
+
+        /// <summary>
+        /// Парсинг из строки
+        /// </summary>
+        /// <param name="dosageString">Строка дозировки из БД</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="FormatException"></exception>
         public static Dosage FromString(string dosageString)
         {
             if (string.IsNullOrWhiteSpace(dosageString))
@@ -26,5 +38,7 @@ namespace TGbot
                 DurationInDays = int.Parse(parts[2]) == 0 ? null : int.Parse(parts[2])
             };
         }
+
+        #endregion
     }
 }

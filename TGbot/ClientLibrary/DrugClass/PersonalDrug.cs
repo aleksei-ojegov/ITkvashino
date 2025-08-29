@@ -16,5 +16,7 @@ namespace ClientLibrary
         /// Дата покупки
         /// </summary>
         public DateTime PurchaseDate { get; set; }
+
+        public List<TimeSpan> RemindTimes { get; set; }
     }
 }

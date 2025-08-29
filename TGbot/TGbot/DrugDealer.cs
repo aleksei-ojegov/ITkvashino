@@ -11,8 +11,22 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace TGbot
 {
+    /// <summary>
+    /// Класс для обработки объекто в "Карусель"
+    /// </summary>
     public class DrugDealer
     {
+        #region Методы
+        /// <summary>
+        /// Отправка первого лекарства из списка в "Карусель"
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="botClient">Клиент</param>
+        /// <param name="chatId">Id чата</param>
+        /// <param name="index">Порядковый номер лекарства</param>
+        /// <param name="drugs">Список лекарств</param>
+        /// <param name="mode">Режим просмотра</param>
+        /// <returns></returns>
         public async Task SendDrug<T>(ITelegramBotClient botClient, long chatId, int index, List<T> drugs, string mode) where T : Drug
         {
             string text = GetDrugText(drugs[index], mode);
@@ -21,6 +35,17 @@ namespace TGbot
             await botClient.SendMessage(chatId, text, replyMarkup: keyboard);
         }
 
+        /// <summary>
+        /// Редактирование "Карусели"
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="botClient">Клиент</param>
+        /// <param name="chatId">Id чата</param>
+        /// <param name="messageId">Id сообщения</param>
+        /// <param name="index">Порядковый номер лекарства</param>
+        /// <param name="drugs">Список лекарств</param>
+        /// <param name="mode">Режим просмотра</param>
+        /// <returns></returns>
         public async Task EditDrug<T>(ITelegramBotClient botClient, long chatId, int messageId, int index, List<T> drugs, string mode) where T: Drug
         {
             string text = GetDrugText(drugs[index], mode);
@@ -29,6 +54,14 @@ namespace TGbot
             await botClient.EditMessageText(chatId, messageId, text, replyMarkup: keyboard);
         }
 
+        /// <summary>
+        /// Генерация клавиатуры
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="index">Порядковый номер лекарства</param>
+        /// <param name="mode">Режим просмотра</param>
+        /// <param name="drugs">Список лекарств</param>
+        /// <returns></returns>
         private static InlineKeyboardMarkup GetKeyboard<T>(int index, string mode, List<T> drugs) where T : Drug
         {
             var buttons = new List<InlineKeyboardButton[]>();
@@ -82,6 +115,12 @@ namespace TGbot
             return new InlineKeyboardMarkup(buttons);
         }
 
+        /// <summary>
+        /// Формирование текста для "Карусели"
+        /// </summary>
+        /// <param name="drug">Список лекарств</param>
+        /// <param name="mode">Режим просмотра</param>
+        /// <returns></returns>
         private static string GetDrugText(Drug drug, string mode)
         {
             if (mode == "all")
@@ -111,6 +150,12 @@ namespace TGbot
             }
         }
 
+        /// <summary>
+        /// Формирование текста о сроке годности
+        /// </summary>
+        /// <param name="shelfLifeText">Срок годности</param>
+        /// <param name="purchaseDate">Дата покупки</param>
+        /// <returns></returns>
         private static string GetExpirationWarning(string shelfLifeText, DateTime purchaseDate)
         {
             // Парсим количество лет из строки
@@ -140,6 +185,12 @@ namespace TGbot
             return string.Empty;
         }
 
+        /// <summary>
+        /// Метод парсинга лет
+        /// </summary>
+        /// <param name="shelfLifeText">Срок годности</param>
+        /// <param name="years">Года</param>
+        /// <returns></returns>
         private static bool TryParseYears(string shelfLifeText, out int years)
         {
             years = 0;
@@ -156,5 +207,6 @@ namespace TGbot
 
             return false;
         }
+        #endregion
     }
 }

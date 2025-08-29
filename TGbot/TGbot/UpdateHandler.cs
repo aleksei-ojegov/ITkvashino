@@ -21,34 +21,45 @@ namespace TGbot
   /// <summary>
   /// Обработчик входящих обновлений от Telegram.
   /// </summary>
-  public class UpdateHandler : IUpdateHandler
+  public class UpdateHandler
   {
+    #region Поля и Свойства
+
     /// <summary>
     /// Обработчик "Карусели"
     /// </summary>
     private readonly DrugDealer _drugDealer;
-   /// <summary>
-   /// Список лекарств из БД
-   /// </summary>
+    /// <summary>
+    /// Список лекарств из БД
+    /// </summary>
     private List<Drug> _drugs;
     /// <summary>
     /// Список лекарств у пользователя
     /// </summary>
     private List<PersonalDrug> _userDrugs;
+    /// <summary>
+    /// Методы для общения с БД
+    /// </summary>
     private Methods _methods = new Methods();
+    /// <summary>
+    /// Переменная для ожидания ответа с временем напоминания
+    /// </summary>
     private static Dictionary<long, PersonalDrug> _awaitingCustomTimes = new();
+    /// <summary>
+    /// Переменная для ожидания ответа с количестов добавленных таблеток
+    /// </summary>
     private static Dictionary<long, PersonalDrug> _awaitingTabletsQuantity = new();
+    /// <summary>
+    /// Переменная для старта запуска напоминаний
+    /// </summary>
     private bool _isStartReminder = false;
+    /// <summary>
+    /// Переменная для ожидания ответа с наименованием лекарства
+    /// </summary>
     private static long _awaitingDrugName = new();
-        public UpdateHandler(DrugDealer drugDealer, List<Drug> drugs)
-    {
-      _drugDealer = drugDealer;
-      _drugs = drugs;
-    }
-    public UpdateHandler()
-    {
 
-    }
+    #endregion
+
     #region <IUpdateHandler>
     public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
@@ -416,10 +427,21 @@ namespace TGbot
       Console.WriteLine(errorMessage);
       return Task.CompletedTask;
     }
-    public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
-    {
-            throw new NotImplementedException();
-    }
+
     #endregion
+
+    #region Конструкторы
+
+    public UpdateHandler(DrugDealer drugDealer, List<Drug> drugs)
+    {
+     _drugDealer = drugDealer;
+     _drugs = drugs;
     }
+    public UpdateHandler()
+    {
+
+    }
+
+    #endregion
+  }
 }
