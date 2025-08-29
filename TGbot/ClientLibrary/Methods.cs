@@ -140,10 +140,10 @@ namespace ClientLibrary
     /// </summary>
     /// <param name="personaId">Id в таблице personal_drug.</param>
     /// <param name="tablets">Новое количество таблеток.</param>
-    public async Task UpdatePersonalDrugsTablets(int personaId, int tablets)
+    public async Task UpdatePersonalDrugsTablets(int personalId, int tablets)
     {
       using var client = new HttpClient();
-      string url = $"http://localhost:5000/api/?action=updatepersonal&id={personaId}&tablets={tablets}";
+      string url = $"http://localhost:5000/api/?action=updatepersonal&id={personalId}&tablets={tablets}";
 
       var response = await client.PostAsync(url, null);
       var result = await response.Content.ReadAsStringAsync();
