@@ -10,6 +10,7 @@ using ClientLibrary;
 using Org.BouncyCastle.Bcpg;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
+using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -17,14 +18,27 @@ using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
 
 namespace TGbot
 {
-  public class UpdateHandler
+  /// <summary>
+  /// Обработчик входящих обновлений от Telegram.
+  /// </summary>
+  public class UpdateHandler : IUpdateHandler
   {
+    /// <summary>
+    /// Обработчик "Карусели"
+    /// </summary>
     private readonly DrugDealer _drugDealer;
+   /// <summary>
+   /// Список лекарств из БД
+   /// </summary>
     private List<Drug> _drugs;
+    /// <summary>
+    /// Список лекарств у пользователя
+    /// </summary>
     private List<PersonalDrug> _userDrugs;
-    private Methods Methods = new Methods();
-    private static Dictionary<long, Drug> _awaitingCustomTimes = new();
+    private Methods _methods = new Methods();
+    private static Dictionary<long, PersonalDrug> _awaitingCustomTimes = new();
     private static Dictionary<long, PersonalDrug> _awaitingTabletsQuantity = new();
+    private bool _isStartReminder = false;
     private static long _awaitingDrugName = new();
         public UpdateHandler(DrugDealer drugDealer, List<Drug> drugs)
     {
@@ -35,7 +49,7 @@ namespace TGbot
     {
 
     }
-
+    #region <IUpdateHandler>
     public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
       try
@@ -60,7 +74,12 @@ namespace TGbot
     private async Task HandleMessage(ITelegramBotClient botClient, Message message)
     {
       var user = message.From;
-      _userDrugs = await Methods.GetAllPersonalDrugs(user.Id, _drugs);
+      _userDrugs = await _methods.GetAllPersonalDrugs(user.Id, _drugs);
+    if (!_isStartReminder)
+     {
+                _isStartReminder = true;
+                Task.Run(() => RemindTimer.StartReminderLoop(botClient, _userDrugs, message.Chat.Id));
+     }
       Console.WriteLine($"Найдено персональных лекарств: {_userDrugs.Count}");
 
       foreach (var pd in _userDrugs)
@@ -135,7 +154,7 @@ namespace TGbot
               $"⚠️ Нужно указать ровно {drug.Dosage.TimesPerDay} времени для приёма!");
             return;
           }
-
+          drug.RemindTimes = times;
           await botClient.SendMessage(
           message.Chat.Id,
           $"✅ Напоминания для {drug.Name} установлены: {string.Join(", ", times.Select(t => t.ToString(@"hh\:mm")))}");
@@ -157,8 +176,8 @@ namespace TGbot
         var findedDrug = _drugs.FirstOrDefault(d => d.Name == input);
         if (findedDrug != null)
         {
-          await Methods.AddPersonalDrugs(user.Id, findedDrug);
-          _userDrugs = await Methods.GetAllPersonalDrugs(user.Id, _drugs);
+          await _methods.AddPersonalDrugs(user.Id, findedDrug);
+          _userDrugs = await _methods.GetAllPersonalDrugs(user.Id, _drugs);
           await botClient.SendMessage(
           message.Chat.Id,
           $"Лекарство {findedDrug.Name} добавлено");
@@ -215,8 +234,8 @@ namespace TGbot
              drug.Tablets = 0;
            }
 
-           await Methods.UpdatePersonalDrugsTablets(drug.Id, drug.Tablets);
-           _userDrugs = await Methods.GetAllPersonalDrugs(user.Id, _drugs);
+           await _methods.UpdatePersonalDrugsTablets(drug.Id, drug.Tablets);
+           _userDrugs = await _methods.GetAllPersonalDrugs(user.Id, _drugs);
            _awaitingTabletsQuantity.Remove(message.Chat.Id);
         }
 
@@ -257,8 +276,8 @@ namespace TGbot
         int index = int.Parse(data[1]);
         string mode = data[2];
         var findedDrug = _drugs.FirstOrDefault(d => d.Name == _drugs[index].Name);
-        await Methods.AddPersonalDrugs(userId, findedDrug);
-        _userDrugs = await Methods.GetAllPersonalDrugs(userId, _drugs);
+        await _methods.AddPersonalDrugs(userId, findedDrug);
+        _userDrugs = await _methods.GetAllPersonalDrugs(userId, _drugs);
         await botClient.DeleteMessage(callbackQuery.Message!.Chat.Id, callbackQuery.Message.MessageId);
 
         await botClient.SendMessage(
@@ -305,8 +324,9 @@ namespace TGbot
           reminderTimes.Add(TimeSpan.FromHours(startHour + i * interval));
         }
         drug.IsActive = true;
-        await Methods.UpdatePersonalDrugActive(drug.Id, drug.IsActive);
-        _userDrugs = await Methods.GetAllPersonalDrugs(user.Id, _drugs);
+        drug.RemindTimes = reminderTimes;
+        await _methods.UpdatePersonalDrugActive(drug.Id, drug.IsActive);
+        _userDrugs = await _methods.GetAllPersonalDrugs(user.Id, _drugs);
         await botClient.SendMessage(
           callbackQuery.Message.Chat.Id,
           $"✅ Напоминания для {drug.Name} установлены: {string.Join(", ", reminderTimes.Select(t => t.ToString(@"hh\:mm")))}");
@@ -318,8 +338,8 @@ namespace TGbot
         string mode = data[2];
         var drug = _userDrugs[index];
         drug.IsActive = true;
-        await Methods.UpdatePersonalDrugActive(drug.Id, drug.IsActive);
-        _userDrugs = await Methods.GetAllPersonalDrugs(user.Id, _drugs);
+        await _methods.UpdatePersonalDrugActive(drug.Id, drug.IsActive);
+        _userDrugs = await _methods.GetAllPersonalDrugs(user.Id, _drugs);
 
         _awaitingCustomTimes[callbackQuery.Message.Chat.Id] = drug;
 
@@ -350,8 +370,8 @@ namespace TGbot
         string mode = data[2];
         var drug = _userDrugs[index];
 
-        await Methods.DeletePersonalDrug(drug.Id);
-        _userDrugs = await Methods.GetAllPersonalDrugs(userId, _drugs);
+        await _methods.DeletePersonalDrug(drug.Id);
+        _userDrugs = await _methods.GetAllPersonalDrugs(userId, _drugs);
 
         await botClient.DeleteMessage(
             callbackQuery.Message!.Chat.Id, 
@@ -371,8 +391,8 @@ namespace TGbot
         var drug = _userDrugs[index];
         drug.IsActive = false;
 
-        await Methods.UpdatePersonalDrugActive(drug.Id, drug.IsActive);
-        _userDrugs = await Methods.GetAllPersonalDrugs(user.Id, _drugs);
+        await _methods.UpdatePersonalDrugActive(drug.Id, drug.IsActive);
+        _userDrugs = await _methods.GetAllPersonalDrugs(user.Id, _drugs);
 
         await botClient.DeleteMessage(
           callbackQuery.Message!.Chat.Id,
@@ -396,5 +416,10 @@ namespace TGbot
       Console.WriteLine(errorMessage);
       return Task.CompletedTask;
     }
-  }
+    public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
+    {
+            throw new NotImplementedException();
+    }
+    #endregion
+    }
 }
