@@ -15,6 +15,10 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.IO;
+using System.Net.Http.Headers;
 
 namespace TGbot
 {
@@ -112,12 +116,12 @@ namespace TGbot
             new KeyboardButton[]
             {
               new KeyboardButton("Мои лекарства"),
-              new KeyboardButton("Добавить лекарства"),
+             new KeyboardButton("Просмотреть все лекарства"),
             },
-            new KeyboardButton[]
-            {
-              new KeyboardButton("Просмотреть все лекарства")
-            },
+            //new KeyboardButton[]
+            //{
+            //  new KeyboardButton("Просмотреть все лекарства")
+            //},
           })
         {
           ResizeKeyboard = true,
@@ -125,7 +129,12 @@ namespace TGbot
 
         await botClient.SendMessage(
           chat.Id,
-          "Жду команды",
+          "🙌🏿 Добро пожаловать!\n\n" +
+          "Я бот для твоей домашней аптечки 😉\n\n" +
+          "Благодаря мне ты можешь:\n" +
+          " * Контролировать срок годности\n" +
+          " * Получать уведомления о приёме\n" +
+          " * Найти лекарство из библиотеки\n",
           replyMarkup: replyKeyboard);
       }
       else if (message.Text == "Мои лекарства")
